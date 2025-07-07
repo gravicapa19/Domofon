@@ -3,8 +3,8 @@ substitutions:
 
 # код для ESPHome. Логіка дещо змінена в порівнянні з оригіналом. Бібліотеки аудіо скопіюйте з оригінального репозиторію.
 # проект https://github.com/SCratORS/SmartIntercom/tree/main
-# створення аудіо https://www.narakeet.com/app/text-to-audio/?projectId=b3dbadb4-e1a4-42bc-a8b2-ea2ae674706a
-# перекодування аудіо в WAV 22kHz https://mp3cutterpro.com/uk/audio-converter
+# створення аудіо https://www.narakeet.com/app/text-to-audio/
+# перекодування аудіо в WAV, Stereo, 22kHz https://mp3cutterpro.com/uk/audio-converter
 
 
 #ESP8266 Определение нужных GPIO
