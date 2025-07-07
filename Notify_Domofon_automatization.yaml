@@ -1,0 +1,172 @@
+alias: Вхідний в телегу
+description: ""
+triggers:
+  - trigger: state
+    entity_id:
+      - binary_sensor.intercom_domofon_line_detect
+    to: "on"
+conditions: []
+actions:
+  - alias: Якщо домофон в звичайному режимі - просто сповіщення і зупинка
+    if:
+      - or:
+          - condition: state
+            entity_id: select.intercom_domofon_modes
+            state: Звичайний
+          - condition: state
+            entity_id: select.intercom_domofon_modes
+            state: Авто скидання
+          - condition: state
+            entity_id: select.intercom_domofon_modes
+            state: Авто відкриття
+          - condition: state
+            entity_id: select.intercom_domofon_modes
+            state: Кур'єр
+    then:
+      - action: notify.mobile_app_moto_z3_play
+        data:
+          message: >-
+            {{
+            states.binary_sensor.intercom_domofon_line_detect.last_changed.strftime("%H:%M:%S")
+            }} \n Вхідний дзвінок в домофон -
+            {{states('select.intercom_domofon_modes')}}
+      - action: notify.mobile_app_motorola_edge_5g_uw_2021
+        data:
+          message: >-
+            {{
+            states.binary_sensor.intercom_domofon_line_detect.last_changed.strftime("%H:%M:%S")
+            }} \n Вхідний дзвінок в домофон -
+            {{states('select.intercom_domofon_modes')}}
+      - stop: Домофон в ручному режимі
+  - alias: Увімкнути підсвітку
+    action: input_number.set_value
+    metadata: {}
+    data:
+      value: 255
+    target:
+      entity_id: input_number.slide_ppoe_green
+  - action: notify.mobile_app_moto_z3_play
+    data:
+      message: Вхідний дзвінок в домофон
+      data:
+        persistent: true
+        vibrationPattern: 1000, 1000, 1000, 1000, 1000
+        channel: Motion
+        tag: Domofon
+        actions:
+          - action: OPEN_DOOR
+            title: ✅ Відкрити
+          - action: REJECT_DOOR
+            title: ❌ Скинути
+  - alias: Якщо дружина вдома (WiFI) - відправити їй запит
+    if:
+      - or:
+          - condition: state
+            entity_id: sensor.motorola_edge_5g_uw_2021_wifi_connection
+            state: "xxx" #your wifi ssid
+          - condition: state
+            entity_id: sensor.motorola_edge_5g_uw_2021_wifi_connection
+            state: xxxx #your wifi ssid
+    then:
+      - action: notify.mobile_app_motorola_edge_5g_uw_2021
+        metadata: {}
+        data:
+          message: Вхідний дзвінок в домофон
+          data:
+            persistent: true
+            channel: Motion
+            vibrationPattern: 100, 1000, 100, 1000, 100, 1000, 100, 1000, 100
+            tag: Domofon
+            actions:
+              - action: OPEN_DOOR
+                title: ✅ Відкрити
+              - action: REJECT_DOOR
+                title: ❌ Скинути
+    enabled: true
+  - wait_for_trigger:
+      - event_type: mobile_app_notification_action
+        event_data:
+          action: OPEN_DOOR
+        trigger: event
+      - event_type: mobile_app_notification_action
+        event_data:
+          action: REJECT_DOOR
+        trigger: event
+    continue_on_timeout: true
+    timeout:
+      hours: 0
+      minutes: 1
+      seconds: 0
+      milliseconds: 0
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ wait.trigger.event.data.action == \"OPEN_DOOR\" }}"
+        sequence:
+          - action: button.press
+            metadata: {}
+            data: {}
+            target:
+              entity_id: button.intercom_domofon_accept_call_btn
+          - action: notify.mobile_app_moto_z3_play
+            data:
+              message: clear_notification
+              data:
+                tag: Domofon
+          - action: notify.mobile_app_motorola_edge_5g_uw_2021
+            data:
+              message: clear_notification
+              data:
+                tag: Domofon
+      - conditions:
+          - condition: template
+            value_template: "{{ wait.trigger.event.data.action == \"REJECT_DOOR\" }}"
+        sequence:
+          - action: button.press
+            metadata: {}
+            data: {}
+            target:
+              entity_id: button.intercom_domofon_reject_call_btn
+          - action: notify.mobile_app_moto_z3_play
+            data:
+              message: clear_notification
+              data:
+                tag: Domofon
+          - action: notify.mobile_app_motorola_edge_5g_uw_2021
+            data:
+              message: clear_notification
+              data:
+                tag: Domofon
+    default:
+      - action: notify.mobile_app_moto_z3_play
+        data:
+          message: clear_notification
+          data:
+            tag: Domofon
+      - action: notify.mobile_app_motorola_edge_5g_uw_2021
+        data:
+          message: clear_notification
+          data:
+            tag: Domofon
+      - action: notify.mobile_app_moto_z3_play
+        data:
+          message: >-
+            {{
+            states.binary_sensor.intercom_domofon_line_detect.last_changed.strftime("%H:%M:%S")
+            }} \n Пропущений дзвінок в домофон -
+            {{states('select.intercom_domofon_modes')}}
+      - action: notify.mobile_app_motorola_edge_5g_uw_2021
+        data:
+          message: >-
+            {{
+            states.binary_sensor.intercom_domofon_line_detect.last_changed.strftime("%H:%M:%S")
+            }} \n Пропущений дзвінок в домофон -
+            {{states('select.intercom_domofon_modes')}}
+  - alias: Вимкнути підсвітку
+    action: input_number.set_value
+    metadata: {}
+    data:
+      value: 0
+    target:
+      entity_id: input_number.slide_ppoe_green
+mode: single
