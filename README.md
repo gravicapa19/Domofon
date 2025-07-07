@@ -1,3 +1,5 @@
+Project for ESPHome for controling my Cyfral Domofon.
+
 Schematic and board https://oshwlab.com/gravicapa19/domofon/
 
 Base on: 
